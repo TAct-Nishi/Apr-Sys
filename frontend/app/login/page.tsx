@@ -4,29 +4,31 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 
 export default function LoginPage() {
-  const router = useRouter()
-  const [userId, setUserId] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-
-    // ここでAPI認証処理を行う（例: fetchでサーバーにPOST）
-    // 今回はダミーで「user01 / password」なら成功とします
-    if (userId === "user01" && password === "password") {
-      // 認証成功時、HOMEへリダイレクト
-      router.push("/")
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    const res = await fetch("http://162.43.70.208:5000/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      localStorage.setItem("token", data.token);
+      // 画面遷移など
     } else {
-      setError("ユーザーIDまたはパスワードが間違っています")
+      setError("ログインに失敗しました");
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <form
-        onSubmit={handleSubmit}
+        onSubmit={handleLogin}
         className="bg-white p-8 rounded shadow-md w-full max-w-sm"
       >
         <h1 className="text-2xl font-bold mb-6 text-center">ログイン</h1>
@@ -36,8 +38,8 @@ export default function LoginPage() {
           <input
             type="text"
             className="w-full border rounded px-3 py-2"
-            value={userId}
-            onChange={e => setUserId(e.target.value)}
+            value={username}
+            onChange={e => setUsername(e.target.value)}
             required
             autoFocus
           />
