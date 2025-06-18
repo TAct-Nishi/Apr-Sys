@@ -11,11 +11,11 @@ interface HeaderProps {
 export default function Header({ currentPage = "" }: HeaderProps) {
   const navItems = [
     { href: "/", label: "HOME", key: "home" },
-    { href: "/applications", label: "申請内容", key: "applications" },
-    { href: "/notifications", label: "お知らせの設定", key: "notifications" },
-    { href: "/season-direction", label: "シーズンディレクション", key: "season-direction" },
-    { href: "/brand-manual", label: "ブランドマニュアル", key: "brand-manual" },
-    { href: "/account", label: "アカウント管理", key: "account" },
+    { href: "/t-product-app", label: "申請内容", key: "applications" },
+    { href: "/t-notifications", label: "お知らせの設定", key: "notifications" },
+    { href: "/t-season-direction", label: "シーズンディレクション", key: "season-direction" },
+    { href: "/t-brand-manual", label: "ブランドマニュアル", key: "brand-manual" },
+    { href: "/t-account", label: "アカウント管理", key: "account" },
   ]
 
   return (
