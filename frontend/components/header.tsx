@@ -3,6 +3,7 @@
 import { LogOut } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { useRouter } from "next/navigation";
 
 interface HeaderProps {
   currentPage?: string
@@ -17,6 +18,18 @@ export default function Header({ currentPage = "" }: HeaderProps) {
     { href: "/t-brand-manual", label: "ブランドマニュアル", key: "brand-manual" },
     { href: "/t-account", label: "アカウント管理", key: "account" },
   ]
+  {/* ログアウトのためのルーター */}
+  const router = useRouter();
+
+  // ログアウト処理
+  const handleLogout = async () => {
+    // localStorageのtoken削除
+    localStorage.removeItem("token");
+    // サーバーにログアウトリクエスト
+    await fetch("/api/logout", { method: "POST" });
+    // /loginへ遷移
+    router.push("/login");
+  };
 
   return (
     <header className="bg-white border-b">
@@ -41,7 +54,7 @@ export default function Header({ currentPage = "" }: HeaderProps) {
         </div>
         <div className="flex items-center space-x-4">
           <span className="text-sm text-gray-700">田中太郎</span>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleLogout}>
             <LogOut className="w-4 h-4 mr-2" />
             ログアウト
           </Button>
