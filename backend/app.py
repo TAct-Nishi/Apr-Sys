@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 import jwt
 
 app = Flask(__name__)
-SECRET_KEY = "your_secret_key"
+SECRET_KEY = "kakinotane"
 
 
 @app.route('/api/login', methods=['POST'])
