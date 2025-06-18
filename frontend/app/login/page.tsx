@@ -10,7 +10,7 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    const res = await fetch("http://162.43.70.208:5000/api/login", {
+    const res = await fetch("http://162.43.70.208:9000/api/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
@@ -18,7 +18,9 @@ export default function LoginPage() {
     if (res.ok) {
       const data = await res.json();
       localStorage.setItem("token", data.token);
-      // 画面遷移など
+      // ログインに成功したら/に移動
+      console.log("ログインに成功しました");
+      //router.push("/");
     } else {
       setError("ログインに失敗しました");
     }
