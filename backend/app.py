@@ -1,10 +1,12 @@
 from flask import Flask, request, jsonify
 import jwt
-from sql import get_db_connection
+from sql import get_db_connection, save_application, get_applications
 from flask import make_response, jsonify
 
 app = Flask(__name__)
 SECRET_KEY = "kakinotane"
+
+# ログイン
 
 
 @app.route('/api/login', methods=['POST'])
@@ -40,6 +42,21 @@ def logout():
     resp.set_cookie("token", "", expires=0, httponly=True,
                     secure=False, samesite='Lax')
     return resp
+
+
+# 申請
+@app.route('/api/applications', methods=['POST'])
+def create_application():
+    data = request.json
+    # バリデーションなど
+    save_application(data)  # DB保存
+    return jsonify({'message': '申請を保存しました'}), 201
+
+
+@app.route('/api/applications', methods=['GET'])
+def list_applications():
+    applications = get_applications()
+    return jsonify(applications)
 
 
 if __name__ == '__main__':

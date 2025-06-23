@@ -1,9 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Calendar, Upload, X } from "lucide-react"
-import { format } from "date-fns"
-import { ja } from "date-fns/locale"
+import { Upload, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -25,8 +23,6 @@ export default function NewApplication() {
     image4: null,
   })
 
-
-
   const handleSeasonChange = (season: string, checked: boolean) => {
     if (checked) {
       setSeasons([...seasons, season])
@@ -38,30 +34,17 @@ export default function NewApplication() {
   // 年・月・日用の配列
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 5 }, (_, i) => currentYear + i); // 今年〜4年後
-  const months = Array.from({ length: 12 }, (_, i) => i + 1);
-  const days = Array.from({ length: 31 }, (_, i) => i + 1);
+  const [seasonYear, setSeasonYear] = useState<string>("");
 
   // useStateで管理
-  // 公開予定日（開始）
-  const [publicStartYear, setPublicStartYear] = useState<number | undefined>();
-  const [publicStartMonth, setPublicStartMonth] = useState<number | undefined>();
-  const [publicStartDay, setPublicStartDay] = useState<number | undefined>();
+  // 公開予定日
+  const [publicStartDate, setPublicStartDate] = useState<string>("");
+  const [publicEndDate, setPublicEndDate] = useState<string>("");
 
-  // 公開予定日（終了）
-  const [publicEndYear, setPublicEndYear] = useState<number | undefined>();
-  const [publicEndMonth, setPublicEndMonth] = useState<number | undefined>();
-  const [publicEndDay, setPublicEndDay] = useState<number | undefined>();
+  // 販売予定日
+  const [saleStartDate, setSaleStartDate] = useState<string>("");
+  const [saleEndDate, setSaleEndDate] = useState<string>("");
 
-  // 販売予定日（開始）
-  const [saleStartYear, setSaleStartYear] = useState<number | undefined>();
-  const [saleStartMonth, setSaleStartMonth] = useState<number | undefined>();
-  const [saleStartDay, setSaleStartDay] = useState<number | undefined>();
-
-  // 販売予定日（終了）
-  const [saleEndYear, setSaleEndYear] = useState<number | undefined>();
-  const [saleEndMonth, setSaleEndMonth] = useState<number | undefined>();
-  const [saleEndDay, setSaleEndDay] = useState<number | undefined>();
-  // ...同様にpublicEndYear, publicEndMonth, publicEndDayなども用意...
   const handleSalesChannelChange = (channel: string, checked: boolean) => {
     if (checked) {
       setSalesChannels([...salesChannels, channel])
@@ -76,6 +59,35 @@ export default function NewApplication() {
       [imageKey]: file,
     })
   }
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    // フォームの値を取得
+    const formData = new FormData(e.currentTarget);
+    const data = {
+      // 例: name, description など
+      name: formData.get('name'),
+      description: formData.get('description'),
+      // 必要なカラムを追加
+    };
+
+    const res = await fetch('/api/applications', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        // 必要なら認証トークンも
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (res.ok) {
+      alert('申請が送信されました');
+      // フォームリセットなど
+    } else {
+      alert('送信に失敗しました');
+    }
+  };
+
 
   const ImageUploadCard = ({ imageKey, label }: { imageKey: string; label: string }) => {
     const file = uploadedImages[imageKey]
@@ -137,7 +149,7 @@ export default function NewApplication() {
         <div className="max-w-6xl mx-auto">
           <h1 className="text-2xl font-bold text-gray-900 mb-8">新規申請</h1>
 
-          <form className="space-y-8">
+          <form className="space-y-8" onSubmit={handleSubmit}>
             {/* 固定値セクション */}
             <Card>
               <CardHeader>
@@ -185,7 +197,7 @@ export default function NewApplication() {
                       <Label htmlFor="season-year" className="text-sm font-medium text-gray-700">
                         シーズン年 <span className="text-red-500">*</span>
                       </Label>
-                      <Select>
+                      <Select value={seasonYear} onValueChange={v => setSeasonYear(v)}>
                         <SelectTrigger className="mt-1">
                           <SelectValue placeholder="年を選択" />
                         </SelectTrigger>
@@ -196,17 +208,19 @@ export default function NewApplication() {
                             </SelectItem>
                           ))}
                         </SelectContent>
+                        <input type="hidden" name="season_year" value={seasonYear} />
                       </Select>
                     </div>
                     <div>
                       <Label className="text-sm font-medium text-gray-700">
                         春夏秋冬 <span className="text-red-500">*</span>
                       </Label>
-                      <div className="mt-2 flex flex-row space-x-4"> {/* ← 横並びに */}
+                      <div className="mt-2 flex flex-row space-x-4">
                         {["春", "夏", "秋", "冬"].map((season) => (
                           <div key={season} className="flex items-center space-x-2">
                             <Checkbox
                               id={season}
+                              // name属性は不要
                               checked={seasons.includes(season)}
                               onCheckedChange={(checked: boolean) => handleSeasonChange(season, checked as boolean)}
                             />
@@ -215,8 +229,9 @@ export default function NewApplication() {
                             </Label>
                           </div>
                         ))}
-                      </div>
-                    </div>
+                        {/* カンマ区切りでhidden inputに格納 */}
+                        <input type="hidden" name="seasons" value={seasons.join(",")} />
+                      </div>                    </div>
                   </div>
                   {/* 商品情報 */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -224,19 +239,19 @@ export default function NewApplication() {
                       <Label htmlFor="product-name" className="text-sm font-medium text-gray-700">
                         商品名 <span className="text-red-500">*</span>
                       </Label>
-                      <Input id="product-name" className="mt-1" placeholder="商品名を入力" />
+                      <Input id="product-name" name="product_name" className="mt-1" placeholder="商品名を入力" />
                     </div>
                     <div>
                       <Label htmlFor="product-code" className="text-sm font-medium text-gray-700">
                         品番 <span className="text-red-500">*</span>
                       </Label>
-                      <Input id="product-code" className="mt-1" placeholder="品番を入力" />
+                      <Input id="product-code" name="product_number" className="mt-1" placeholder="品番を入力" />
                     </div>
                     <div>
                       <Label htmlFor="production-quantity" className="text-sm font-medium text-gray-700">
                         生産数量
                       </Label>
-                      <Input id="production-quantity" className="mt-1" placeholder="生産数量を入力" />
+                      <Input id="production-quantity" name="production_quantity" className="mt-1" placeholder="生産数量を入力" />
                     </div>
                   </div>
                 </div>
@@ -247,25 +262,25 @@ export default function NewApplication() {
                     <Label htmlFor="material" className="text-sm font-medium text-gray-700">
                       素材
                     </Label>
-                    <Input id="material" className="mt-1" placeholder="素材を入力" />
+                    <Input id="material" name="material" className="mt-1" placeholder="素材を入力" />
                   </div>
                   <div>
                     <Label htmlFor="size" className="text-sm font-medium text-gray-700">
                       サイズ
                     </Label>
-                    <Input id="size" className="mt-1" placeholder="サイズを入力" />
+                    <Input id="size" name="sizes" className="mt-1" placeholder="サイズを入力" />
                   </div>
                   <div>
                     <Label htmlFor="color" className="text-sm font-medium text-gray-700">
                       カラー
                     </Label>
-                    <Input id="color" className="mt-1" placeholder="カラーを入力" />
+                    <Input id="color" name="colors" className="mt-1" placeholder="カラーを入力" />
                   </div>
                   <div>
                     <Label htmlFor="retail-price" className="text-sm font-medium text-gray-700">
                       上代
                     </Label>
-                    <Input id="retail-price" className="mt-1" placeholder="上代を入力" />
+                    <Input id="retail-price" name="unit_price" className="mt-1" placeholder="上代を入力" />
                   </div>
                 </div>
 
@@ -274,7 +289,7 @@ export default function NewApplication() {
                   <Label htmlFor="function-description" className="text-sm font-medium text-gray-700">
                     機能説明
                   </Label>
-                  <Textarea id="function-description" className="mt-1" placeholder="機能説明を入力" rows={4} />
+                  <Textarea id="function-description" name="feature_description" className="mt-1" placeholder="機能説明を入力" rows={4} />
                 </div>
 
                 {/* 公開予定日 */}
@@ -282,80 +297,30 @@ export default function NewApplication() {
                   {/* 公開予定日（開始） */}
                   <div>
                     <Label className="text-sm font-medium text-gray-700">公開予定日（開始）</Label>
-                    <div className="flex items-end space-x-2 mt-1">
-                      {/* 年 */}
-                      <div>
-                        <Select onValueChange={v => setPublicStartYear(Number(v))}>
-                          <SelectTrigger className="w-25">{publicStartYear ? `${publicStartYear}年` : "年"}</SelectTrigger>
-                          <SelectContent>
-                            {years.map(year => (
-                              <SelectItem key={year} value={String(year)}>{year}年</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      {/* 月 */}
-                      <div>
-                        <Select onValueChange={v => setPublicStartMonth(Number(v))}>
-                          <SelectTrigger className="w-20">{publicStartMonth ? `${publicStartMonth}月` : "月"}</SelectTrigger>
-                          <SelectContent>
-                            {months.map(month => (
-                              <SelectItem key={month} value={String(month)}>{month}月</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      {/* 日 */}
-                      <div>
-                        <Select onValueChange={v => setPublicStartDay(Number(v))}>
-                          <SelectTrigger className="w-20">{publicStartDay ? `${publicStartDay}日` : "日"}</SelectTrigger>
-                          <SelectContent>
-                            {days.map(day => (
-                              <SelectItem key={day} value={String(day)}>{day}日</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
+                    <Input
+                      type="text"
+                      placeholder="例: 2024-07-01"
+                      name="public_start_date"
+                      value={publicStartDate}
+                      onChange={e => setPublicStartDate(e.target.value)}
+                      className="mt-1"
+                      pattern="\d{4}-\d{2}-\d{2}"
+                      title="YYYY-MM-DD形式で入力してください"
+                    />
                   </div>
                   {/* 公開予定日（終了） */}
                   <div>
                     <Label className="text-sm font-medium text-gray-700">公開予定日（終了）</Label>
-                    <div className="flex items-end space-x-2 mt-1">
-                      {/* 年 */}
-                      <div>
-                        <Select onValueChange={v => setPublicEndYear(Number(v))}>
-                          <SelectTrigger className="w-25">{publicEndYear ? `${publicEndYear}年` : "年"}</SelectTrigger>
-                          <SelectContent>
-                            {years.map(year => (
-                              <SelectItem key={year} value={String(year)}>{year}年</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      {/* 月 */}
-                      <div>
-                        <Select onValueChange={v => setPublicEndMonth(Number(v))}>
-                          <SelectTrigger className="w-20">{publicEndMonth ? `${publicEndMonth}月` : "月"}</SelectTrigger>
-                          <SelectContent>
-                            {months.map(month => (
-                              <SelectItem key={month} value={String(month)}>{month}月</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      {/* 日 */}
-                      <div>
-                        <Select onValueChange={v => setPublicEndDay(Number(v))}>
-                          <SelectTrigger className="w-20">{publicEndDay ? `${publicEndDay}日` : "日"}</SelectTrigger>
-                          <SelectContent>
-                            {days.map(day => (
-                              <SelectItem key={day} value={String(day)}>{day}日</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
+                    <Input
+                      type="text"
+                      placeholder="例: 2024-07-01"
+                      name="public_end_date"
+                      value={publicEndDate}
+                      onChange={e => setPublicEndDate(e.target.value)}
+                      className="mt-1"
+                      pattern="\d{4}-\d{2}-\d{2}"
+                      title="YYYY-MM-DD形式で入力してください"
+                    />
                   </div>
                 </div>
 
@@ -364,82 +329,62 @@ export default function NewApplication() {
                   {/* 販売予定日（開始） */}
                   <div>
                     <Label className="text-sm font-medium text-gray-700">販売予定日（開始）</Label>
-                    <div className="flex items-end space-x-2 mt-1">
-                      {/* 年 */}
-                      <div>
-                        <Select onValueChange={v => setSaleStartYear(Number(v))}>
-                          <SelectTrigger className="w-25">{saleStartYear ? `${saleStartYear}年` : "年"}</SelectTrigger>
-                          <SelectContent>
-                            {years.map(year => (
-                              <SelectItem key={year} value={String(year)}>{year}年</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      {/* 月 */}
-                      <div>
-                        <Select onValueChange={v => setSaleStartMonth(Number(v))}>
-                          <SelectTrigger className="w-20">{saleStartMonth ? `${saleStartMonth}月` : "月"}</SelectTrigger>
-                          <SelectContent>
-                            {months.map(month => (
-                              <SelectItem key={month} value={String(month)}>{month}月</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      {/* 日 */}
-                      <div>
-                        <Select onValueChange={v => setSaleStartDay(Number(v))}>
-                          <SelectTrigger className="w-20">{saleStartDay ? `${saleStartDay}日` : "日"}</SelectTrigger>
-                          <SelectContent>
-                            {days.map(day => (
-                              <SelectItem key={day} value={String(day)}>{day}日</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
+                    <Input
+                      type="text"
+                      placeholder="例: 2024-07-01"
+                      name="sale_start_date"
+                      value={saleStartDate}
+                      onChange={e => setSaleStartDate(e.target.value)}
+                      className="mt-1"
+                      pattern="\d{4}-\d{2}-\d{2}"
+                      title="YYYY-MM-DD形式で入力してください"
+                    />
                   </div>
                   {/* 販売予定日（終了） */}
                   <div>
                     <Label className="text-sm font-medium text-gray-700">販売予定日（終了）</Label>
-                    <div className="flex items-end space-x-2 mt-1">
-                      {/* 年 */}
-                      <div>
-                        <Select onValueChange={v => setSaleEndYear(Number(v))}>
-                          <SelectTrigger className="w-25">{saleEndYear ? `${saleEndYear}年` : "年"}</SelectTrigger>
-                          <SelectContent>
-                            {years.map(year => (
-                              <SelectItem key={year} value={String(year)}>{year}年</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      {/* 月 */}
-                      <div>
-                        <Select onValueChange={v => setSaleEndMonth(Number(v))}>
-                          <SelectTrigger className="w-20">{saleEndMonth ? `${saleEndMonth}月` : "月"}</SelectTrigger>
-                          <SelectContent>
-                            {months.map(month => (
-                              <SelectItem key={month} value={String(month)}>{month}月</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      {/* 日 */}
-                      <div>
-                        <Select onValueChange={v => setSaleEndDay(Number(v))}>
-                          <SelectTrigger className="w-20">{saleEndDay ? `${saleEndDay}日` : "日"}</SelectTrigger>
-                          <SelectContent>
-                            {days.map(day => (
-                              <SelectItem key={day} value={String(day)}>{day}日</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                    <Input
+                      type="text"
+                      placeholder="例: 2024-07-01"
+                      name="sale_end_date"
+                      value={saleEndDate}
+                      onChange={e => setSaleEndDate(e.target.value)}
+                      className="mt-1"
+                      pattern="\d{4}-\d{2}-\d{2}"
+                      title="YYYY-MM-DD形式で入力してください"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="sale-destination" className="text-sm font-medium text-gray-700">
+                      販売先
+                    </Label>
+                    <Input id="sale-destination" name="sale_channel" className="mt-1" placeholder="販売先を入力" />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700">販路タイプ</Label>
+                    <div className="mt-2 flex flex-row space-x-4">
+                      {["専門店", "量販店", "通信販売", "その他"].map((channel) => (
+                        <div key={channel} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={channel}
+                            // name属性は不要
+                            checked={salesChannels.includes(channel)}
+                            onCheckedChange={(checked) => handleSalesChannelChange(channel, checked as boolean)}
+                          />
+                          <Label htmlFor={channel} className="text-sm">
+                            {channel}
+                          </Label>
+                        </div>
+                      ))}
+                      {/* カンマ区切りでhidden inputに格納 */}
+                      <input type="hidden" name="sale_route_type" value={salesChannels.join(",")} />
                     </div>
                   </div>
                 </div>
+
               </CardContent>
             </Card>
 
