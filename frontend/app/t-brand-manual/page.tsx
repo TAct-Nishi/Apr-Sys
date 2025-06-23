@@ -32,7 +32,7 @@ export default function NotificationsSettings() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header currentPage="brand-manual" />
+      <Header currentPage="t-brand-manual" />
 
       {/* メインコンテンツ */}
       <main className="p-6">

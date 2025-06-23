@@ -91,7 +91,7 @@ export default function AccountManagement() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header currentPage="account" />
+      <Header currentPage="t-account" />
 
       {/* メインコンテンツ */}
       <main className="p-6">

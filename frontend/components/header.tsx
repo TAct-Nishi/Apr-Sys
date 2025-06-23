@@ -12,13 +12,14 @@ interface HeaderProps {
 export default function Header({ currentPage = "" }: HeaderProps) {
   const navItems = [
     { href: "/", label: "HOME", key: "home" },
-    { href: "/t-product-app", label: "申請内容", key: "applications" },
-    { href: "/t-notifications", label: "お知らせの設定", key: "notifications" },
-    { href: "/t-season-direction", label: "シーズンディレクション", key: "season-direction" },
-    { href: "/t-brand-manual", label: "ブランドマニュアル", key: "brand-manual" },
-    { href: "/t-account", label: "アカウント管理", key: "account" },
+    { href: "/t-product-app", label: "申請一覧", key: "t-product-app" },
+    { href: "/l-product-app", label: "申請", key: "l-product-app" },
+    { href: "/t-notifications", label: "お知らせ", key: "t-notifications" },
+    { href: "/t-season-direction", label: "シーズンディレクション", key: "t-season-direction" },
+    { href: "/t-brand-manual", label: "ブランドマニュアル", key: "t-brand-manual" },
+    { href: "/t-account", label: "アカウント管理", key: "t-account" },
   ]
-  {/* ログアウトのためのルーター */}
+  {/* ログアウトのためのルーター */ }
   const router = useRouter();
 
   // ログアウト処理

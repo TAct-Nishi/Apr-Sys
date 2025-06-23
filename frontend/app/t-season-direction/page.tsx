@@ -47,7 +47,7 @@ export default function NotificationsSettings() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header currentPage="season-direction" />
+      <Header currentPage="t-season-direction" />
 
       {/* メインコンテンツ */}
       <main className="p-6">

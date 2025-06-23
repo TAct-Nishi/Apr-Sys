@@ -67,7 +67,7 @@ export default function NotificationsSettings() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header currentPage="notifications" />
+      <Header currentPage="t-notifications" />
 
       {/* メインコンテンツ */}
       <main className="p-6">

@@ -131,7 +131,7 @@ export default function NewApplication() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header currentPage="applications" />
+      <Header currentPage="l-applications" />
 
       <main className="p-6">
         <div className="max-w-6xl mx-auto">
